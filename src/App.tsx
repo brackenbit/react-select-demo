@@ -56,6 +56,24 @@ export const App = () => {
         setValue(newValue);
     };
 
+    const testFetch = async () => {
+        const url: string = "http://localhost:5173/api/test";
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        };
+
+        const response = await fetch(url, requestOptions);
+        if (!response.ok) {
+            throw new Error("Failed to fetch /api/test");
+        }
+
+        const responseJson = await response.json();
+        console.log(responseJson);
+    };
+
     return (
         <>
             <div>
@@ -79,7 +97,10 @@ export const App = () => {
                     Log value
                 </button>
             </div>
-            <div></div>
+            <div>
+                <h4>MSW testing</h4>
+                <button onClick={testFetch}>Fetch .../api/test</button>
+            </div>
         </>
     );
 };

@@ -2,9 +2,9 @@
  * react-select-demo
  * Brackenbit 2024
  *
- * Given limited documentation for react-select, especially with Typescript,
- * this demo app seeks to work out how to drive it from analysing the source
- * and experimenting.
+ * Originally this was intended to be a simple demo app to test out and learn react-select.
+ * Given limited documentation for react-select and MSW v2+ with Typescript, it became an
+ * experiment to work out how react-select / msw types work.
  */
 
 import { useState } from "react";
@@ -12,6 +12,7 @@ import "./App.css";
 import { ColourOption, colourOptions } from "./data/data";
 import Select, { StylesConfig } from "react-select";
 import { ActionMeta, OnChangeValue } from "react-select";
+import { SimpleOption } from "./mocks/handlers";
 
 // Define a custom style to apply to the multi-select
 // (react-select defaults to white text on white background, how helpful!
@@ -74,11 +75,64 @@ export const App = () => {
         console.log(responseJson);
     };
 
+    const getOptions = async () => {
+        const url: string = "http://localhost:5173/api/options";
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        };
+
+        const response = await fetch(url, requestOptions);
+        if (!response.ok) {
+            throw new Error("Failed to fetch /api/options");
+        }
+
+        const responseJson = await response.json();
+        console.log(responseJson);
+    };
+
+    const postOptions = async (newOption: SimpleOption) => {
+        const url: string = "http://localhost:5173/api/options";
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newOption),
+        };
+
+        const response = await fetch(url, requestOptions);
+        if (!response.ok) {
+            throw new Error("Failed to POST to /api/options");
+        }
+
+        const responseJson = await response.json();
+        console.log(responseJson);
+    };
+
+    // TEMP Kludge - okay for a demo!
+    // Just to help me work out how msw handles types.
+    let newOptionIncrement = 3;
+
+    function testNewOption() {
+        postOptions({
+            value: newOptionIncrement.toString(),
+            label: newOptionIncrement.toString(),
+        });
+        newOptionIncrement++;
+    }
+
     return (
         <>
             <div>
                 <h1>react-select demo</h1>
-                <h4>Rainbow multi-select:</h4>
+                <h4>Rainbow multi-select</h4>
+                <p>
+                    No documentation to explain which keys refer to which
+                    internal components? Time to make a horrible rainbow!
+                </p>
                 <Select
                     value={value}
                     isMulti
@@ -99,7 +153,9 @@ export const App = () => {
             </div>
             <div>
                 <h4>MSW testing</h4>
-                <button onClick={testFetch}>Fetch .../api/test</button>
+                <button onClick={testFetch}>GET .../api/test</button>
+                <button onClick={getOptions}>GET .../api/options</button>
+                <button onClick={testNewOption}>POST .../api/options</button>
             </div>
         </>
     );

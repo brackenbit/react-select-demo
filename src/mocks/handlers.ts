@@ -10,7 +10,7 @@
  * http.get<Params, RequestBodyType, ResponseBodyType, Path>(path, resolver)
  */
 
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, PathParams } from "msw";
 
 // (Export for use in App, also.)
 export type SimpleOption = {
@@ -36,6 +36,7 @@ let options: SimpleOption[] = [
 ];
 
 // Define handler
+// Simple GET can infer types with no type arguments needed.
 const getOptionsHandler = http.get("/api/options", async () => {
     return HttpResponse.json({
         options,
@@ -44,39 +45,27 @@ const getOptionsHandler = http.get("/api/options", async () => {
 
 // POST /api/options
 // API to add new options for use in creatable select
-// http.post is a HttpRequestHandler:
-// type HttpRequestHandler = <Params extends PathParams<keyof Params> = PathParams,
-//                            RequestBodyType extends DefaultBodyType = DefaultBodyType,
-//                            ResponseBodyType extends DefaultBodyType = undefined,
-//                            RequestPath extends Path = Path>(
-//                                path: RequestPath,
-//                                resolver: HttpResponseResolver<Params, RequestBodyType, ResponseBodyType>,
-//                                options?: RequestHandlerOptions) => HttpHandler;
-
-type PostOptionsRequestBody = {
-    option: SimpleOption;
-};
-
-type PostOptionsResponseBody = {
-    options: SimpleOption[];
-};
-
+// POST requires type arguments to be provided
 const postOptionsHandler = http.post<
-    {}, // narrows Params type (N/A)
-    PostOptionsRequestBody, // narrows RequestBodyType
-    PostOptionsResponseBody, // narrows ResponseBodyType
-    "/api/options"
+    PathParams, // narrows Params
+    // ^ can simply use the inbuilt msw types for generics where you
+    // only care about some of the type arguments.
+    SimpleOption, // narrows RequestBodyType
+    { options: SimpleOption[] } // narrows ResponseBodyType
+    // It appears ResponseBodyType MUST be narrowed to a Record.
+    // i.e. Not possible to return options array directly.
+    // Some docs show redundant inclusion of path ("/api/options") as fourth
+    // type argument; it seems this can be omitted with no effect.
 >("/api/options", async ({ request }) => {
     // Parse JSON to get new option
-    const requestData = await request.json();
-    let newOption = requestData.option;
+    const newOption: SimpleOption = await request.json();
 
     // Add new option to the array
     options.push(newOption);
 
     // Return new array of options in response
     return HttpResponse.json({
-        options: options,
+        options,
     });
 });
 

@@ -61,6 +61,14 @@ export const App = () => {
         console.log(responseJson);
     };
 
+    // Function to automatically select newly created options
+    // A bit of a kludge, but concept proven.
+    const selectNewOption = (inputValue: string) => {
+        let value = inputValue.toLocaleLowerCase().replace(/\W/g, "");
+        let label = inputValue;
+        setValueCMSelect([...valueCMSelect, { value, label }]);
+    };
+
     return (
         <>
             <div>
@@ -77,7 +85,11 @@ export const App = () => {
             </div>
             <div>
                 <h4>Creatable Multi select</h4>
-                <CMSelect value={valueCMSelect} onChange={onChangeCMSelect} />
+                <CMSelect
+                    value={valueCMSelect}
+                    onChange={onChangeCMSelect}
+                    onCreateOption={selectNewOption}
+                />
             </div>
             <div>
                 <h4>Testing</h4>
